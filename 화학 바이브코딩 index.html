@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)file:///C:/Users/boss/AppData/Local/Temp/le_chatelier_index.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>르샤트리에 원리 화학 탐구 학습 - 이산화질소 평형반응 퀴즈</title>
+    <style>
+        /* Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        :root {
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --text-muted: #7f8c8d;
+            --primary-color: #4a90e2;
+            --primary-hover: #357abd;
+            --accent-no2: #a0522d; /* NO2 갈색 */
+            --accent-n2o4: #708090; /* N2O4 Slate gray */
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --border-color: #e2e8f0;
+            --border-radius: 16px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            --font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 왼쪽 레이아웃 - 시뮬레이터와 설명 */
+        .simulator-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #1a365d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        .equation-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #2d3748;
+        }
+
+        .equation-box span.no2 { color: #a855f7; }
+        .equation-box span.n2o4 { color: #06b6d4; }
+        .equation-box span.heat { color: #ef4444; }
+
+        /* 반응기 Canvas */
+        .chamber-container {
+            position: relative;
+            background: #ffffff;
+            border: 3px solid #cbd5e1;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 380px;
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.5s ease;
+        }
+
+        #chamberCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 피스톤 상단 물리적 표현 */
+        .piston {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 16px;
+            background: linear-gradient(to bottom, #94a3b8, #64748b);
+            border-bottom: 3px solid #475569;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: top 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 10;
+        }
+
+        .chamber-overlay-info {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--border-color);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .indicator-dot.temp { background-color: #ef4444; }
+        .indicator-dot.vol { background-color: #3b82f6; }
+
+        /* 오른쪽 레이아웃 - 퀴즈 인터페이스 */
+        .quiz-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4a90e2, #63b3ed);
+            transition: width 0.4s ease;
+        }
+
+        .stage-indicator {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .question-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a365d;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .scenario-box {
+            background-color: #f0f7ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 12px 18px;
+            border-radius: 4px 12px 12px 4px;
+            font-size: 0.95rem;
+            color: #2b6cb0;
+            font-weight: 500;
+            margin-bottom: 25px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: #ffffff;
+            border: 2px solid var(--border-color);
+            padding: 15px 20px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 0.98rem;
+            font-weight: 600;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            background-color: #f7fafc;
+            transform: translateY(-2px);
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .option-btn.correct {
+            background-color: #e6fffa;
+            border-color: var(--success-color);
+            color: #234e52;
+        }
+
+        .option-btn.wrong {
+            background-color: #fff5f5;
+            border-color: var(--error-color);
+            color: #742a2a;
+        }
+
+        /* 피드백 박스 */
+        .feedback-box {
+            background-color: #f7fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .feedback-header {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-header.correct { color: var(--success-color); }
+        .feedback-header.wrong { color: var(--error-color); }
+
+        .feedback-text {
+            font-size: 0.92rem;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .next-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: background 0.2s ease;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
+        }
+
+        .next-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        /* 성적표 화면 */
+        .results-screen {
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .results-score {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+
+        .results-rank {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .results-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .restart-btn {
+            background: #2d3748;
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .restart-btn:hover {
+            background: #1a202c;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 가이드 툴팁 효과 */
+        .guide-banner {
+            background: #fffff0;
+            border: 1px dashed #ecc94b;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #744210;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 왼쪽: 시뮬레이터 및 반응 설명 -->
+    <div class="simulator-section">
+        <div class="header">
+            <h1>🧪 르샤트리에 화학 탐구 실험실</h1>
+            <p>이산화질소 평형 반응을 실시간으로 관찰하고, 퀴즈의 원인을 밝혀보세요.</p>
+        </div>
+
+        <div class="equation-box">
+            <span class="no2">2NO₂ (적갈색)</span>
+            <span> ⇄ </span>
+            <span class="n2o4">N₂O₄ (무색)</span>
+            <span> + </span>
+            <span class="heat">57.2 kJ (열)</span>
+        </div>
+
+        <div class="chamber-container" id="chamberContainer">
+            <div class="piston" id="chamberPiston" style="top: 0%;"></div>
+            <canvas id="chamberCanvas" width="498" height="374"></canvas>
+
+            <div class="chamber-overlay-info">
+                <div class="indicator">
+                    <span class="indicator-dot temp"></span>
+                    <span id="tempValue">온도: 보통 (25°C)</span>
+                </div>
+                <div class="indicator">
+                    <span class="indicator-dot vol"></span>
+                    <span id="volValue">부피: 100%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-banner">
+            💡 <span><strong>관찰 가이드:</strong> 적갈색 NO₂ 분자들이 결합하면 무색 N₂O₄가 됩니다. 반응기의 색상 농도와 각 분자들의 거동을 주의 깊게 살피세요.</span>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 퀴즈 세션 -->
+    <div class="quiz-section" id="quizContainer">
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 100%"></div>
+                </div>
+            
+                <div class="results-screen">
+                    <h2 class="question-title" style="font-size: 1.6rem;">🧪 탐구 성적표</h2>
+                    <div class="results-score">6 / 6</div>
+                    <div class="results-rank">🏆 화학 평형의 마스터 (르샤트리에 그 자체)</div>
+                    <p class="results-desc">가역 반응에서 평형의 이동 방향을 정확하게 예측하고, 정반응과 역반응의 변화 법칙을 완벽히 정복하셨습니다!</p>
+                    <button class="restart-btn" id="restartGameBtn">다시 도전하기</button>
+                </div>
+            </div>
+</div>
+
+<script>
+    // --- 화학/물리 시뮬레이터 클래스 정의 ---
+    class ChemistrySimulator {
+        constructor(canvasId, pistonId) {
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext('2d');
+            this.piston = document.getElementById(pistonId);
+
+            // 반응기 설정 상수
+            this.baseHeight = 380; // 기본 높이
+            this.particles = [];
+            
+            // 실시간 상태 변수
+            this.temperature = 25; // °C
+            this.volume = 1.0;     // 부피 비율 (0.5 ~ 1.5)
+            
+            // 이산화질소 반응 평형 제어 타겟
+            // NO2 입자수와 N2O4 입자수 목표치
+            this.targetNO2 = 20;
+            this.targetN2O4 = 10;
+            
+            this.initCanvas();
+            this.spawnParticles();
+            this.animate();
+        }
+
+        initCanvas() {
+            // High DPI 화면 최적화
+            const rect = this.canvas.getBoundingClientRect();
+            this.canvas.width = rect.width;
+            this.canvas.height = rect.height;
+            window.addEventListener('resize', () => {
+                const r = this.canvas.getBoundingClientRect();
+                this.canvas.width = r.width;
+                this.canvas.height = r.height;
+            });
+        }
+
+        // 초기 무작위 입자 스폰
+        spawnParticles() {
+            this.particles = [];
+            // NO2 생성
+            for (let i = 0; i < this.targetNO2; i++) {
+                this.particles.push(this.createParticle('NO2'));
+            }
+            // N2O4 생성
+            for (let i = 0; i < this.targetN2O4; i++) {
+                this.particles.push(this.createParticle('N2O4'));
+            }
+        }
+
+        createParticle(type) {
+            const size = type === 'NO2' ? 6 : 10;
+            const borderPadding = 20;
+            const currentPistonHeight = this.canvas.height * (1 - this.volume);
+            const minY = currentPistonHeight + borderPadding + size;
+            const maxY = this.canvas.height - borderPadding - size;
+
+            return {
+                type: type,
+                x: Math.random() * (this.canvas.width - 2 * borderPadding) + borderPadding,
+                y: Math.random() * (maxY - minY) + minY,
+                vx: (Math.random() - 0.5) * (this.temperature / 10 + 2),
+                vy: (Math.random() - 0.5) * (this.temperature / 10 + 2),
+                radius: size,
+                color: type === 'NO2' ? 'rgba(160, 82, 45, 0.85)' : 'rgba(112, 128, 144, 0.4)'
+            };
+        }
+
+        // 온도가 오르면 평형이 NO2(갈색) 생성 정반응/역반응 중 역반응 우세해짐
+        // 온도가 내리면 N2O4(무색) 정반응 우세
+        updateEquilibrium() {
+            // 이산화질소 평형 모델링
+            const tempFactor = (this.temperature - 25) / 15;
+            let baseNO2 = 20 + tempFactor * 8;
+            
+            const volFactor = this.volume;
+            if (volFactor < 1.0) {
+                baseNO2 -= (1.0 - volFactor) * 14;
+            } else {
+                baseNO2 += (volFactor - 1.0) * 8;
+            }
+
+            this.targetNO2 = Math.max(4, Math.min(45, Math.round(baseNO2)));
+            this.targetN2O4 = Math.max(2, Math.min(25, Math.round((50 - this.targetNO2) / 2)));
+        }
+
+        processReactions() {
+            let currentNO2Count = this.particles.filter(p => p.type === 'NO2').length;
+            let currentN2O4Count = this.particles.filter(p => p.type === 'N2O4').length;
+
+            if (currentNO2Count < this.targetNO2 && currentN2O4Count > 0) {
+                const n2o4Idx = this.particles.findIndex(p => p.type === 'N2O4');
+                if (n2o4Idx !== -1) {
+                    const basePart = this.particles[n2o4Idx];
+                    this.particles.splice(n2o4Idx, 1);
+                    this.particles.push(this.createNO2At(basePart.x, basePart.y));
+                    this.particles.push(this.createNO2At(basePart.x + 10, basePart.y + 10));
+                }
+            } 
+            else if (currentNO2Count > this.targetNO2 && currentNO2Count >= 2) {
+                const no2Idx1 = this.particles.findIndex(p => p.type === 'NO2');
+                const no2Idx2 = this.particles.findIndex((p, idx) => p.type === 'NO2' && idx !== no2Idx1);
+                
+                if (no2Idx1 !== -1 && no2Idx2 !== -1) {
+                    const p1 = this.particles[no2Idx1];
+                    const maxIdx = Math.max(no2Idx1, no2Idx2);
+                    const minIdx = Math.min(no2Idx1, no2Idx2);
+                    this.particles.splice(maxIdx, 1);
+                    this.particles.splice(minIdx, 1);
+                    this.particles.push(this.createN2O4At((p1.x), p1.y));
+                }
+            }
+        }
+
+        createNO2At(x, y) {
+            return {
+                type: 'NO2',
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * (this.temperature / 10 + 2),
+                vy: (Math.random() - 0.5) * (this.temperature / 10 + 2),
+                radius: 6,
+                color: 'rgba(160, 82, 45, 0.85)'
+            };
+        }
+
+        createN2O4At(x, y) {
+            return {
+                type: 'N2O4',
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * (this.temperature / 15 + 1.5),
+                vy: (Math.random() - 0.5) * (this.temperature / 15 + 1.5),
+                radius: 10,
+                color: 'rgba(112, 128, 144, 0.4)'
+            };
+        }
+
+        setTemperature(temp) {
+            this.temperature = temp;
+            document.getElementById('tempValue').innerText = `온도: ${temp === 25 ? '보통 (25°C)' : temp > 25 ? '높음 (80°C)' : '낮음 (0°C)'}`;
+            this.updateEquilibrium();
+        }
+
+        setVolume(vol) {
+            this.volume = vol;
+            this.piston.style.top = `${(1 - vol) * 60}%`;
+            document.getElementById('volValue').innerText = `부피: ${Math.round(vol * 100)}%`;
+            this.updateEquilibrium();
+        }
+
+        injectNO2(count) {
+            for (let i = 0; i < count; i++) {
+                this.particles.push(this.createParticle('NO2'));
+            }
+            this.targetNO2 += Math.round(count * 0.4); 
+        }
+
+        extractN2O4(count) {
+            let removed = 0;
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                if (this.particles[i].type === 'N2O4') {
+                    this.particles.splice(i, 1);
+                    removed++;
+                    if (removed >= count) break;
+                }
+            }
+            this.targetN2O4 = Math.max(1, this.targetN2O4 - removed);
+        }
+
+        animate() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.processReactions();
+
+            const currentNO2Count = this.particles.filter(p => p.type === 'NO2').length;
+            const density = currentNO2Count / this.volume;
+            const opacity = Math.min(0.75, (density / 50));
+            this.ctx.fillStyle = `rgba(139, 69, 19, ${opacity})`;
+            
+            const currentPistonHeight = this.canvas.height * (1 - this.volume) * 0.6;
+            this.ctx.fillRect(0, currentPistonHeight, this.canvas.width, this.canvas.height - currentPistonHeight);
+
+            const speedMultiplier = (this.temperature + 40) / 65;
+
+            this.particles.forEach(p => {
+                p.x += p.vx * speedMultiplier;
+                p.y += p.vy * speedMultiplier;
+
+                if (p.x - p.radius < 0) {
+                    p.x = p.radius;
+                    p.vx = -p.vx;
+                } else if (p.x + p.radius > this.canvas.width) {
+                    p.x = this.canvas.width - p.radius;
+                    p.vx = -p.vx;
+                }
+
+                const topLimit = currentPistonHeight;
+                if (p.y - p.radius < topLimit) {
+                    p.y = topLimit + p.radius;
+                    p.vy = -p.vy;
+                } else if (p.y + p.radius > this.canvas.height) {
+                    p.y = this.canvas.height - p.radius;
+                    p.vy = -p.vy;
+                }
+
+                this.ctx.beginPath();
+                this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                this.ctx.fillStyle = p.color;
+                this.ctx.strokeStyle = p.type === 'NO2' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.7)';
+                this.ctx.lineWidth = 1;
+                this.ctx.fill();
+                this.ctx.stroke();
+            });
+
+            requestAnimationFrame(() => this.animate());
+        }
+    }
+
+    // --- 퀴즈 스테이지 데이터 (압력 증가/감소로 선지 통일 및 부피 설명 제거 완료) ---
+    const QUIZ_STAGES = [
+        {
+            stage: 1,
+            title: "돌발 현상 1",
+            scenario: "부피가 줄어들면서 반응용기 색상이 일시적으로 탁해진 후, 시간이 흐르면서 점차 맑아졌습니다.",
+            hintEffect: (sim) => {
+                sim.setVolume(0.5); 
+            },
+            question: "어떤 조건 변화로 인해 평형이 이동하였습니까?",
+            options: [
+                { text: "압력 증가", correct: true },
+                { text: "압력 감소", correct: false },
+                { text: "온도 상승", correct: false },
+                { text: "생성물 제거", correct: false }
+            ],
+            explanation: "용기 압력이 증가하면 계는 기체 분자 수를 줄여 압력을 낮추려고 합니다. 이에 따라 2분자 기체(NO₂)가 1분자 기체(N₂O₄)로 변하는 정반응이 우세하게 진행되어 맑아집니다."
+        },
+        {
+            stage: 2,
+            title: "돌발 현상 2",
+            scenario: "용기 내부 색상이 점차 옅어지며 무색의 N₂O₄ 입자 수가 증가하고 있습니다.",
+            hintEffect: (sim) => {
+                sim.setTemperature(0); 
+            },
+            question: "어떤 조건 변화로 인해 평형이 이동하였습니까?",
+            options: [
+                { text: "온도 상승", correct: false },
+                { text: "온도 하강", correct: true },
+                { text: "반응물 주입", correct: false },
+                { text: "압력 감소", correct: false }
+            ],
+            explanation: "정반응이 발열 반응인 계에서 온도를 낮추면 온도를 높이기 위해 열을 방출하는 방향인 **정반응이 우세하게 평형이 이동**하여 무색 기체가 늘어납니다."
+        },
+        {
+            stage: 3,
+            title: "돌발 현상 3",
+            scenario: "용기 속 갈색 분자가 순식간에 많아진 후, 이 분자들이 서서히 소모되며 정반응 방향으로 반응이 진행되기 시작했습니다.",
+            hintEffect: (sim) => {
+                sim.injectNO2(25); 
+            },
+            question: "어떤 조건 변화로 인해 평형이 이동하였습니까?",
+            options: [
+                { text: "반응물(NO₂) 추가", correct: true },
+                { text: "생성물(N₂O₄) 추가", correct: false },
+                { text: "온도 상승", correct: false },
+                { text: "온도 하강", correct: false }
+            ],
+            explanation: "반응물의 농도가 증가하면, 계는 이 농도를 다시 줄이는 방향인 **정반응이 우세하게 평형이 이동**합니다."
+        },
+        {
+            stage: 4,
+            title: "돌발 현상 4",
+            scenario: "용기 내부 기체들의 갈색 색상이 전보다 눈에 띄게 진하고 탁하게 변화하였습니다.",
+            hintEffect: (sim) => {
+                sim.setTemperature(80); 
+            },
+            question: "어떤 조건 변화로 인해 평형이 이동하였습니까?",
+            options: [
+                { text: "온도 하강", correct: false },
+                { text: "온도 상승", correct: true },
+                { text: "압력 증가", correct: false },
+                { text: "생성물 추가", correct: false }
+            ],
+            explanation: "온도를 높이면 열을 흡수하여 온도를 내리는 흡열 방향인 **역반응이 우세하게 평형이 이동**합니다. 갈색 NO₂가 많아져 색이 짙어집니다."
+        },
+        {
+            stage: 5,
+            title: "돌발 현상 5",
+            scenario: "부피가 늘어난 직후 색상이 옅어졌으나, 시간이 지나며 갈색 기체의 수가 다시 증가하기 시작했습니다.",
+            hintEffect: (sim) => {
+                sim.setVolume(1.5); 
+            },
+            question: "어떤 조건 변화로 인해 평형이 이동하였습니까?",
+            options: [
+                { text: "압력 감소", correct: true },
+                { text: "압력 증가", correct: false },
+                { text: "반응물 제거", correct: false },
+                { text: "온도 하강", correct: false }
+            ],
+            explanation: "압력이 감소하면, 계는 압력을 높이기 위해 기체 분자 수가 늘어나는 흡열 방향인 **역반응이 우세하게 평형이 이동**합니다."
+        },
+        {
+            stage: 6,
+            title: "돌발 현상 6",
+            scenario: "계가 균형을 유지하고 있던 중, 무색 입자가 감소하자 이를 보충하기 위해 즉각 정반응 속도가 빨라졌습니다.",
+            hintEffect: (sim) => {
+                sim.extractN2O4(8); 
+            },
+            question: "어떤 조건 변화로 인해 평형이 이동하였습니까?",
+            options: [
+                { text: "생성물(N₂O₄) 제거", correct: true },
+                { text: "반응물(NO₂) 제거", correct: false },
+                { text: "압력 증가", correct: false },
+                { text: "온도 상승", correct: false }
+            ],
+            explanation: "우측에 위치한 생성물 N₂O₄의 농도가 감소하면, 계는 줄어든 생성물을 생성하는 방향인 **정반응이 우세하게 평형이 이동**합니다."
+        }
+    ];
+
+    // --- 게임 애플리케이션 상태 관리 ---
+    class QuizGame {
+        constructor(simInstance) {
+            this.sim = simInstance;
+            this.container = document.getElementById('quizContainer');
+            this.currentStageIdx = 0;
+            this.score = 0;
+            this.answers = [];
+
+            this.showStartScreen();
+        }
+
+        showStartScreen() {
+            this.container.innerHTML = `
+                <div class="results-screen" style="padding: 20px 10px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🎓</div>
+                    <h2 class="question-title" style="font-size: 1.5rem; margin-bottom: 10px;">화학 평형 이동 판단 퀴즈</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.6;">
+                        반응기에서 나타난 <strong>평형 이동 현상</strong>을 관찰한 뒤,<br>
+                        원인이 된 <strong>외부 조건 변화</strong>를 선택하세요.
+                    </p>
+                    <button class="next-btn" id="startQuizBtn" style="margin-top: 0;">퀴즈 풀기 (총 6단계)</button>
+                </div>
+            `;
+
+            document.getElementById('startQuizBtn').addEventListener('click', () => {
+                this.loadStage(0);
+            });
+        }
+
+        loadStage(index) {
+            this.currentStageIdx = index;
+            const stageData = QUIZ_STAGES[index];
+
+            this.sim.setTemperature(25);
+            this.sim.setVolume(1.0);
+
+            setTimeout(() => {
+                stageData.hintEffect(this.sim);
+            }, 800);
+
+            const progress = ((index) / QUIZ_STAGES.length) * 100;
+            
+            this.container.innerHTML = `
+                <div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="stage-indicator">Stage ${stageData.stage} of ${QUIZ_STAGES.length}</div>
+                    <h2 class="question-title">${stageData.title}</h2>
+                    <div class="scenario-box">
+                        <strong>현상:</strong> ${stageData.scenario}
+                    </div>
+                    <p style="font-size: 0.98rem; font-weight: 700; margin-bottom: 15px; color: #2d3748;">
+                        Q. ${stageData.question}
+                    </p>
+                    <div class="options-list" id="optionsList"></div>
+                    <div id="feedbackContainer"></div>
+                </div>
+            `;
+
+            const optionsList = document.getElementById('optionsList');
+            stageData.options.forEach((opt, oIdx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <span>${opt.text}</span>
+                    <span class="icon"></span>
+                `;
+                btn.addEventListener('click', () => this.handleAnswer(opt, btn));
+                optionsList.appendChild(btn);
+            });
+        }
+
+        handleAnswer(option, selectedBtn) {
+            const stageData = QUIZ_STAGES[this.currentStageIdx];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = option.correct;
+            if (isCorrect) {
+                this.score += 1;
+                selectedBtn.classList.add('correct');
+                selectedBtn.querySelector('.icon').innerText = '✓';
+            } else {
+                selectedBtn.classList.add('wrong');
+                selectedBtn.querySelector('.icon').innerText = '✗';
+                
+                buttons.forEach((btn, idx) => {
+                    if (stageData.options[idx].correct) {
+                        btn.classList.add('correct');
+                        btn.querySelector('.icon').innerText = '✓';
+                    }
+                });
+            }
+
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            feedbackContainer.innerHTML = `
+                <div class="feedback-box">
+                    <div class="feedback-header ${isCorrect ? 'correct' : 'wrong'}">
+                        <span>${isCorrect ? '🎉 정답입니다!' : '😢 오답입니다!'}</span>
+                    </div>
+                    <div class="feedback-text">
+                        ${stageData.explanation}
+                    </div>
+                    <button class="next-btn" id="nextStageBtn">
+                        ${this.currentStageIdx === QUIZ_STAGES.length - 1 ? '최종 성적표 보기' : '다음 단계 이동'}
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('nextStageBtn').addEventListener('click', () => {
+                if (this.currentStageIdx === QUIZ_STAGES.length - 1) {
+                    this.showResults();
+                } else {
+                    this.loadStage(this.currentStageIdx + 1);
+                }
+            });
+        }
+
+        showResults() {
+            this.container.innerHTML = `
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 100%"></div>
+                </div>
+            `;
+
+            let rank = "";
+            let description = "";
+
+            if (this.score === 6) {
+                rank = "🏆 화학 평형의 마스터 (르샤트리에 그 자체)";
+                description = "가역 반응에서 평형의 이동 방향을 정확하게 예측하고, 정반응과 역반응의 변화 법칙을 완벽히 정복하셨습니다!";
+            } else if (this.score >= 4) {
+                rank = "🥈 수석 화학 연구원";
+                description = "가역 반응과 동적 평형 상태에서 온도, 압력, 농도가 평형 이동 방향에 미치는 영향을 훌륭하게 이해하고 계십니다.";
+            } else {
+                rank = "🥉 초급 탐구 과학자";
+                description = "가역 반응의 기초와 평형의 이동 이론을 다듬고 있는 단계입니다. 정반응과 역반응이 일어날 때의 시각적 피드백을 기초로 다시 탐구해 보세요.";
+            }
+
+            this.container.innerHTML += `
+                <div class="results-screen">
+                    <h2 class="question-title" style="font-size: 1.6rem;">🧪 탐구 성적표</h2>
+                    <div class="results-score">${this.score} / ${QUIZ_STAGES.length}</div>
+                    <div class="results-rank">${rank}</div>
+                    <p class="results-desc">${description}</p>
+                    <button class="restart-btn" id="restartGameBtn">다시 도전하기</button>
+                </div>
+            `;
+
+            this.sim.setTemperature(25);
+            this.sim.setVolume(1.0);
+
+            document.getElementById('restartGameBtn').addEventListener('click', () => {
+                this.score = 0;
+                this.loadStage(0);
+            });
+        }
+    }
+
+    // --- 웹앱 인스턴스 초기화 ---
+    window.addEventListener('DOMContentLoaded', () => {
+        const simulator = new ChemistrySimulator('chamberCanvas', 'chamberPiston');
+        const game = new QuizGame(simulator);
+    });
+</script>
+
+
+
+</body></html>
